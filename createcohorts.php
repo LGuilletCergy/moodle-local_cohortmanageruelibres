@@ -406,7 +406,7 @@ $timesync = time();
 
 // Cohortes de VETs remplies et de composantes.
 
-echo "Début des VETs remplies./n";
+echo "Début des VETs remplies.\n";
 
 $sqllistcohortsvets = "SELECT distinct cohortid FROM {local_cohortmanager_info} WHERE "
         . "(typecohort LIKE 'vet' OR typecohort LIKE 'composante')";
@@ -441,24 +441,24 @@ if ($fileopeningvet == false) {
     $anneunivsvet = $xpathvarvet->query("//Student/Annee_universitaire[@AnneeUniv=$CFG->thisyear]");
     $oldstudent = null;
 
-    echo "VETs remplies Test 1./n";
+    echo "VETs remplies Test 1.\n";
 
     foreach ($anneunivsvet as $anneuniv) {
 
-        echo "VETs remplies Test 2./n";
+        echo "VETs remplies Test 2.\n";
 
         $student = $anneuniv->parentNode;
         $username = $student->getAttribute('StudentUID');
 
         if ($DB->record_exists('user', array('username' => $username))) {
 
-            echo "VETs remplies Test 3./n";
+            echo "VETs remplies Test 3.\n";
 
             $user = $DB->get_record('user', array('username' => $username));
 
             if ($oldstudent) {
 
-                echo "VETs remplies Test 4./n";
+                echo "VETs remplies Test 4.\n";
 
                 if ($oldstudent->getAttribute('StudentUID') != $anneuniv->parentNode->getAttribute('StudentUID')) {
 
@@ -468,11 +468,11 @@ if ($fileopeningvet == false) {
                         $fieldinfo1id = $DB->get_record('user_info_field', array('shortname' => 'cohortinfo1'))->id;
                         $fieldinfo2id = $DB->get_record('user_info_field', array('shortname' => 'cohortinfo2'))->id;
 
-                        echo "VETs remplies Test 5./n";
+                        echo "VETs remplies Test 5.\n";
 
                         if ($compteurvet == 1) {
 
-                            echo "VETs remplies Test 5.1./n";
+                            echo "VETs remplies Test 5.1.\n";
 
                             $DB->delete_records('user_info_data',
                                     array('userid' => $user->id, 'fieldid' => $fieldinfo1id));
@@ -481,7 +481,7 @@ if ($fileopeningvet == false) {
 
                         } else if ($compteurvet == 2) {
 
-                            echo "VETs remplies Test 5.2./n";
+                            echo "VETs remplies Test 5.2.\n";
 
                             $DB->delete_records('user_info_data',
                                     array('userid' => $user->id, 'fieldid' => $fieldinfo2id));
@@ -492,18 +492,18 @@ if ($fileopeningvet == false) {
                 }
             } else {
 
-                echo "VETs remplies Test 6./n";
+                echo "VETs remplies Test 6.\n";
 
                 $compteurvet = 1;
             }
 
-            echo "VETs remplies Test 7./n";
+            echo "VETs remplies Test 7.\n";
 
             $oldstudent = $student;
 
             if ($DB->record_exists('user', array('username' => $username))) {
 
-                echo "VETs remplies Test 8./n";
+                echo "VETs remplies Test 8.\n";
 
                 $memberid = $DB->get_record('user', array('username' => $username))->id;
 
@@ -511,7 +511,7 @@ if ($fileopeningvet == false) {
 
                 foreach ($anneuniv->childNodes as $inscription) {
 
-                    echo "VETs remplies Test 9./n";
+                    echo "VETs remplies Test 9.\n";
 
                     if ($inscription->nodeType !== 1 ) {
                         continue;
@@ -531,7 +531,7 @@ if ($fileopeningvet == false) {
                         if (!$DB->record_exists('cohort', array('idnumber' => $cohortcode,
                             'contextid' => $contextidparentincategory))) {
 
-                            echo "VETs remplies Test 10./n";
+                            echo "VETs remplies Test 10.\n";
 
                             $cohort = new stdClass();
                             $cohort->contextid = $contextidparentincategory;
@@ -546,7 +546,7 @@ if ($fileopeningvet == false) {
                             echo "Elle est créée.\n";
                         } else {
 
-                            echo "VETs remplies Test 11./n";
+                            echo "VETs remplies Test 11.\n";
 
                             $cohortid = $DB->get_record('cohort', array('idnumber' => $cohortcode,
                                 'contextid' => $contextidparentincategory))->id;
@@ -558,7 +558,7 @@ if ($fileopeningvet == false) {
                                 array('cohortid' => $cohortid,
                                     'codeelp' => 0))) {
 
-                            echo "VETs remplies Test 12./n";
+                            echo "VETs remplies Test 12.\n";
 
                             // Update record.
 
@@ -572,7 +572,7 @@ if ($fileopeningvet == false) {
 
                         } else {
 
-                            echo "VETs remplies Test 13./n";
+                            echo "VETs remplies Test 13.\n";
 
                             $cohortinfo = new stdClass();
                             $cohortinfo->cohortid = $cohortid;
@@ -587,7 +587,7 @@ if ($fileopeningvet == false) {
                         if (!$DB->record_exists('cohort_members',
                                 array('cohortid' => $cohortid, 'userid' => $user->id))) {
 
-                            echo "VETs remplies Test 14.1./n";
+                            echo "VETs remplies Test 14.1.\n";
 
                             echo "Inscription de l'utilisateur ".$username."\n";
 
@@ -596,7 +596,7 @@ if ($fileopeningvet == false) {
                             echo "Utilisateur inscrit\n";
                         } else {
 
-                            echo "VETs remplies Test 12.2./n";
+                            echo "VETs remplies Test 12.2.\n";
 
                             foreach ($listexistence as $tempexistence) {
 
@@ -614,7 +614,7 @@ if ($fileopeningvet == false) {
                     if ($DB->record_exists('user_info_field', array('shortname' => 'cohortinfo1'))
                             && $DB->record_exists('user_info_field', array('shortname' => 'cohortinfo2'))) {
 
-                        echo "VETs remplies Test 15./n";
+                        echo "VETs remplies Test 15.\n";
 
                         $vetname = $inscription->getAttribute('LibEtape');
 
@@ -661,7 +661,7 @@ if ($fileopeningvet == false) {
                         $compteurvet++;
                     }
 
-                    echo "VETs remplies Test 16./n";
+                    echo "VETs remplies Test 16.\n";
 
                     // Trouver la cohorte de composante ou la créer et l'y inscrire.
 
@@ -673,7 +673,7 @@ if ($fileopeningvet == false) {
                     if ($DB->record_exists('course_categories',
                             array('idnumber' => $categorycode))) {
 
-                        echo "VETs remplies Test 17./n";
+                        echo "VETs remplies Test 17.\n";
 
                         $composantecategory = $DB->get_record('course_categories',
                                 array('idnumber' => $categorycode));
@@ -699,7 +699,7 @@ if ($fileopeningvet == false) {
                             echo "Elle est créée.\n";
                         } else {
 
-                            echo "VETs remplies Test 18./n";
+                            echo "VETs remplies Test 18.\n";
 
                             $cohortcomposanteid = $DB->get_record('cohort',
                                     array('idnumber' => $cohortcomposantecode,
@@ -712,7 +712,7 @@ if ($fileopeningvet == false) {
                                 array('cohortid' => $cohortcomposanteid,
                                     'codeelp' => 0))) {
 
-                            echo "VETs remplies Test 19./n";
+                            echo "VETs remplies Test 19.\n";
 
                             // Update record.
 
@@ -726,7 +726,7 @@ if ($fileopeningvet == false) {
 
                         } else {
 
-                            echo "VETs remplies Test 20./n";
+                            echo "VETs remplies Test 20.\n";
 
                             $cohortcomposanteinfo = new stdClass();
                             $cohortcomposanteinfo->cohortid = $cohortcomposanteid;
@@ -741,7 +741,7 @@ if ($fileopeningvet == false) {
                         if (!$DB->record_exists('cohort_members',
                                 array('cohortid' => $cohortcomposanteid, 'userid' => $user->id))) {
 
-                            echo "VETs remplies Test 21.1./n";
+                            echo "VETs remplies Test 21.1.\n";
 
                             echo "Inscription de l'utilisateur ".$username."\n";
 
@@ -750,7 +750,7 @@ if ($fileopeningvet == false) {
                             echo "Utilisateur inscrit\n";
                         } else {
 
-                            echo "VETs remplies Test 21.2./n";
+                            echo "VETs remplies Test 21.2.\n";
 
                             foreach ($listexistence as $tempexistence) {
 
@@ -770,7 +770,7 @@ if ($fileopeningvet == false) {
     $previousanneunivsvet = $xpathvarvet->query("//Student/Annee_universitaire[@AnneeUniv=$CFG->previousyear]");
     $previousoldstudent = null;
 
-    echo "VETs remplies Test 22./n";
+    echo "VETs remplies Test 22.\n";
 
     foreach ($previousanneunivsvet as $anneuniv) {
 
@@ -788,7 +788,7 @@ if ($fileopeningvet == false) {
                     if ($DB->record_exists('user_info_field', array('shortname' => 'cohortinfo1'))
                             && $DB->record_exists('user_info_field', array('shortname' => 'cohortinfo2'))) {
 
-                        echo "VETs remplies Test 23./n";
+                        echo "VETs remplies Test 23.\n";
 
                         $fieldinfo1id = $DB->get_record('user_info_field', array('shortname' => 'cohortinfo1'))->id;
                         $fieldinfo2id = $DB->get_record('user_info_field', array('shortname' => 'cohortinfo2'))->id;
@@ -814,7 +814,7 @@ if ($fileopeningvet == false) {
                 $compteurvet = 1;
             }
 
-            echo "VETs remplies Test 24./n";
+            echo "VETs remplies Test 24.\n";
 
             $previousoldstudent = $student;
 
@@ -852,14 +852,14 @@ if ($fileopeningvet == false) {
 
                             echo "La cohorte ".$cohort->name." n'existe pas\n";
 
-                            echo "VETs remplies Test 25./n";
+                            echo "VETs remplies Test 25.\n";
 
                             $cohortid = cohort_add_cohort($cohort);
 
                             echo "Elle est créée.\n";
                         } else {
 
-                            echo "VETs remplies Test 26./n";
+                            echo "VETs remplies Test 26.\n";
 
                             $cohortid = $DB->get_record('cohort', array('idnumber' => $cohortcode,
                                 'contextid' => $contextidparentincategory))->id;
@@ -881,7 +881,7 @@ if ($fileopeningvet == false) {
 
                             $DB->update_record('local_cohortmanager_info', $cohortinfo);
 
-                            echo "VETs remplies Test 27./n";
+                            echo "VETs remplies Test 27.\n";
 
                         } else {
 
@@ -894,7 +894,7 @@ if ($fileopeningvet == false) {
 
                             $DB->insert_record('local_cohortmanager_info', $cohortinfo);
 
-                            echo "VETs remplies Test 28./n";
+                            echo "VETs remplies Test 28.\n";
                         }
 
                         if (!$DB->record_exists('cohort_members',
@@ -902,14 +902,14 @@ if ($fileopeningvet == false) {
 
                             echo "Inscription de l'utilisateur ".$username."\n";
 
-                            echo "VETs remplies Test 29./n";
+                            echo "VETs remplies Test 29.\n";
 
                             cohort_add_member($cohortid, $user->id);
 
                             echo "Utilisateur inscrit\n";
                         } else {
 
-                            echo "VETs remplies Test 30./n";
+                            echo "VETs remplies Test 30.\n";
 
                             foreach ($listexistence as $tempexistence) {
 
@@ -927,7 +927,7 @@ if ($fileopeningvet == false) {
                     if ($DB->record_exists('user_info_field', array('shortname' => 'cohortinfo1'))
                             && $DB->record_exists('user_info_field', array('shortname' => 'cohortinfo2'))) {
 
-                        echo "VETs remplies Test 31./n";
+                        echo "VETs remplies Test 31.\n";
 
                         $vetname = $inscription->getAttribute('LibEtape');
 
@@ -974,7 +974,7 @@ if ($fileopeningvet == false) {
                         $compteurvet++;
                     }
 
-                    echo "VETs remplies Test 32./n";
+                    echo "VETs remplies Test 32.\n";
 
                     // Trouver la cohorte de composante ou la créer et l'y inscrire.
 
@@ -986,7 +986,7 @@ if ($fileopeningvet == false) {
                     if ($DB->record_exists('course_categories',
                             array('idnumber' => $categorycode))) {
 
-                        echo "VETs remplies Test 33./n";
+                        echo "VETs remplies Test 33.\n";
 
                         $composantecategory = $DB->get_record('course_categories',
                                 array('idnumber' => $categorycode));
@@ -998,7 +998,7 @@ if ($fileopeningvet == false) {
                         if (!$DB->record_exists('cohort', array('idnumber' => $cohortcomposantecode,
                             'contextid' => $contextidcomposantecategory))) {
 
-                            echo "VETs remplies Test 34./n";
+                            echo "VETs remplies Test 34.\n";
 
                             $cohortcomposante = new stdClass();
                             $cohortcomposante->contextid = $contextidcomposantecategory;
@@ -1014,7 +1014,7 @@ if ($fileopeningvet == false) {
                             echo "Elle est créée.\n";
                         } else {
 
-                            echo "VETs remplies Test 35./n";
+                            echo "VETs remplies Test 35.\n";
 
                             $cohortcomposanteid = $DB->get_record('cohort',
                                     array('idnumber' => $cohortcomposantecode,
@@ -1037,7 +1037,7 @@ if ($fileopeningvet == false) {
 
                             $DB->update_record('local_cohortmanager_info', $cohortcomposanteinfo);
 
-                            echo "VETs remplies Test 36./n";
+                            echo "VETs remplies Test 36.\n";
 
                         } else {
 
@@ -1050,7 +1050,7 @@ if ($fileopeningvet == false) {
 
                             $DB->insert_record('local_cohortmanager_info', $cohortcomposanteinfo);
 
-                            echo "VETs remplies Test 37./n";
+                            echo "VETs remplies Test 37.\n";
                         }
 
                         if (!$DB->record_exists('cohort_members',
@@ -1058,14 +1058,14 @@ if ($fileopeningvet == false) {
 
                             echo "Inscription de l'utilisateur ".$username."\n";
 
-                            echo "VETs remplies Test 38./n";
+                            echo "VETs remplies Test 38.\n";
 
                             cohort_add_member($cohortcomposanteid, $user->id);
 
                             echo "Utilisateur inscrit\n";
                         } else {
 
-                            echo "VETs remplies Test 39./n";
+                            echo "VETs remplies Test 39.\n";
 
                             foreach ($listexistence as $tempexistence) {
 
@@ -1082,15 +1082,15 @@ if ($fileopeningvet == false) {
         }
     }
 
-    echo "VETs remplies Test 40./n";
+    echo "VETs remplies Test 40.\n";
 
     if (isset($listexistence)) {
 
-        echo "VETs remplies Test 41./n";
+        echo "VETs remplies Test 41.\n";
 
         foreach ($listexistence as $tempexistence) {
 
-            echo "VETs remplies Test 42./n";
+            echo "VETs remplies Test 42.\n";
 
             if ($tempexistence->stillexists == 0) {
 
@@ -1105,7 +1105,7 @@ if ($fileopeningvet == false) {
     }
 }
 
-echo "Fin VETs remplies./n";
+echo "Fin VETs remplies.\n";
 
 // Cohorte Tous étudiants.
 
