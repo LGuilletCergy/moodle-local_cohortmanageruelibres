@@ -1428,30 +1428,30 @@ if ($fileopeningall == false) {
     $DB->delete_records_select('local_cohortmanager_info', $selectdeleteoldcohortinfo);
 }
 
-// Cohortes de services. Pas sur UE Libres !!!
-
-$sqllistcohortsservices = "SELECT distinct cohortid FROM {local_cohortmanager_info} WHERE "
-        . "(typecohort LIKE 'service')";
-
-$listcohortsservicesdb = $DB->get_records_sql($sqllistcohortsservices);
-
-$listexistenceservice = array();
-
-foreach ($listcohortsservicesdb as $cohortservicedb) {
-
-    $listmembersdb = $DB->get_records('cohort_members',
-            array('cohortid' => $cohortservicedb->cohortid));
-
-    foreach ($listmembersdb as $memberdb) {
-
-        $tempexistence = new stdClass();
-        $tempexistence->cohortid = $cohortservicedb->cohortid;
-        $tempexistence->userid = $memberdb->id;
-        $tempexistence->stillexists = 0;
-
-        $listexistenceservice[] = $tempexistence;
-    }
-}
+//// Cohortes de services. Pas sur UE Libres !!!
+//
+//$sqllistcohortsservices = "SELECT distinct cohortid FROM {local_cohortmanager_info} WHERE "
+//        . "(typecohort LIKE 'service')";
+//
+//$listcohortsservicesdb = $DB->get_records_sql($sqllistcohortsservices);
+//
+//$listexistenceservice = array();
+//
+//foreach ($listcohortsservicesdb as $cohortservicedb) {
+//
+//    $listmembersdb = $DB->get_records('cohort_members',
+//            array('cohortid' => $cohortservicedb->cohortid));
+//
+//    foreach ($listmembersdb as $memberdb) {
+//
+//        $tempexistence = new stdClass();
+//        $tempexistence->cohortid = $cohortservicedb->cohortid;
+//        $tempexistence->userid = $memberdb->id;
+//        $tempexistence->stillexists = 0;
+//
+//        $listexistenceservice[] = $tempexistence;
+//    }
+//}
 
 /* Commenté car la composition du code service a changé dans les nouveaux fichiers DOKEOS
  * et que je ne voyais pas où on utilisait ces cohortes.
