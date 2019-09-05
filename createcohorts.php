@@ -952,97 +952,97 @@ if ($fileopeningvet == false) {
 
                     echo "VETs remplies Test 32.\n";
 
-                    // Trouver la cohorte de composante ou la créer et l'y inscrire.
-
-                    $composantecode = substr($inscription->getAttribute('CodeEtape'), 0, 1);
-
-                    $cohortcomposantecode = $CFG->previousyearprefix."-S".$composantecode;
-                    $categorycode = $CFG->previousyearprefix."-".$composantecode;
-
-                    echo "VETs remplies Test 33.\n";
-
-                    $contextidcomposantecategory = context_system::instance()->id;
-
-                    if (!$DB->record_exists('cohort', array('idnumber' => $cohortcomposantecode,
-                        'contextid' => $contextidcomposantecategory))) {
-
-                        echo "VETs remplies Test 34.\n";
-
-                        $cohortcomposante = new stdClass();
-                        $cohortcomposante->contextid = $contextidcomposantecategory;
-                        $cohortcomposante->name = 'Etudiants de'.$composantecode;
-                        $cohortcomposante->idnumber = $cohortcomposantecode;
-                        $cohortcomposante->component = 'local_cohortmanager';
-
-                        echo "La cohorte ".$cohortcomposante->name." n'existe pas\n";
-
-                        $cohortcomposanteid = cohort_add_cohort($cohortcomposante);
-
-                        echo "Elle est créée.\n";
-                    } else {
-
-                        echo "VETs remplies Test 35.\n";
-
-                        $cohortcomposanteid = $DB->get_record('cohort',
-                                array('idnumber' => $cohortcomposantecode,
-                                    'contextid' => $contextidcomposantecategory))->id;
-                    }
-
-                    // Ici, rajouter l'entrée dans local_cohortmanager_info.
-
-                    if ($DB->record_exists('local_cohortmanager_info',
-                            array('cohortid' => $cohortcomposanteid,
-                                'codeelp' => 0))) {
-
-                        // Update record.
-
-                        $cohortcomposanteinfo = $DB->get_record('local_cohortmanager_info',
-                            array('cohortid' => $cohortcomposanteid,
-                                'codeelp' => 0));
-
-                        $cohortcomposanteinfo->timesynced = $timesync;
-
-                        $DB->update_record('local_cohortmanager_info', $cohortcomposanteinfo);
-
-                        echo "VETs remplies Test 36.\n";
-
-                    } else {
-
-                        $cohortcomposanteinfo = new stdClass();
-                        $cohortcomposanteinfo->cohortid = $cohortcomposanteid;
-                        $cohortcomposanteinfo->teacherid = null;
-                        $cohortcomposanteinfo->codeelp = 0;
-                        $cohortcomposanteinfo->timesynced = $timesync;
-                        $cohortcomposanteinfo->typecohort = "composante";
-
-                        $DB->insert_record('local_cohortmanager_info', $cohortcomposanteinfo);
-
-                        echo "VETs remplies Test 37.\n";
-                    }
-
-                    if (!$DB->record_exists('cohort_members',
-                            array('cohortid' => $cohortcomposanteid, 'userid' => $user->id))) {
-
-                        echo "Inscription de l'utilisateur ".$username."\n";
-
-                        echo "VETs remplies Test 38.\n";
-
-                        cohort_add_member($cohortcomposanteid, $user->id);
-
-                        echo "Utilisateur inscrit\n";
-                    } else {
-
-                        echo "VETs remplies Test 39.\n";
-
-                        foreach ($listexistence as $tempexistence) {
-
-                            if ($tempexistence->userid == $user->id
-                                    && $tempexistence->cohortid == $cohortcomposanteid) {
-
-                                $tempexistence->stillexists = 1;
-                            }
-                        }
-                    }
+//                    // Trouver la cohorte de composante ou la créer et l'y inscrire. Pas sur UE Libres.
+//
+//                    $composantecode = substr($inscription->getAttribute('CodeEtape'), 0, 1);
+//
+//                    $cohortcomposantecode = $CFG->previousyearprefix."-S".$composantecode;
+//                    $categorycode = $CFG->previousyearprefix."-".$composantecode;
+//
+//                    echo "VETs remplies Test 33.\n";
+//
+//                    $contextidcomposantecategory = context_system::instance()->id;
+//
+//                    if (!$DB->record_exists('cohort', array('idnumber' => $cohortcomposantecode,
+//                        'contextid' => $contextidcomposantecategory))) {
+//
+//                        echo "VETs remplies Test 34.\n";
+//
+//                        $cohortcomposante = new stdClass();
+//                        $cohortcomposante->contextid = $contextidcomposantecategory;
+//                        $cohortcomposante->name = 'Etudiants de'.$composantecode;
+//                        $cohortcomposante->idnumber = $cohortcomposantecode;
+//                        $cohortcomposante->component = 'local_cohortmanager';
+//
+//                        echo "La cohorte ".$cohortcomposante->name." n'existe pas\n";
+//
+//                        $cohortcomposanteid = cohort_add_cohort($cohortcomposante);
+//
+//                        echo "Elle est créée.\n";
+//                    } else {
+//
+//                        echo "VETs remplies Test 35.\n";
+//
+//                        $cohortcomposanteid = $DB->get_record('cohort',
+//                                array('idnumber' => $cohortcomposantecode,
+//                                    'contextid' => $contextidcomposantecategory))->id;
+//                    }
+//
+//                    // Ici, rajouter l'entrée dans local_cohortmanager_info.
+//
+//                    if ($DB->record_exists('local_cohortmanager_info',
+//                            array('cohortid' => $cohortcomposanteid,
+//                                'codeelp' => 0))) {
+//
+//                        // Update record.
+//
+//                        $cohortcomposanteinfo = $DB->get_record('local_cohortmanager_info',
+//                            array('cohortid' => $cohortcomposanteid,
+//                                'codeelp' => 0));
+//
+//                        $cohortcomposanteinfo->timesynced = $timesync;
+//
+//                        $DB->update_record('local_cohortmanager_info', $cohortcomposanteinfo);
+//
+//                        echo "VETs remplies Test 36.\n";
+//
+//                    } else {
+//
+//                        $cohortcomposanteinfo = new stdClass();
+//                        $cohortcomposanteinfo->cohortid = $cohortcomposanteid;
+//                        $cohortcomposanteinfo->teacherid = null;
+//                        $cohortcomposanteinfo->codeelp = 0;
+//                        $cohortcomposanteinfo->timesynced = $timesync;
+//                        $cohortcomposanteinfo->typecohort = "composante";
+//
+//                        $DB->insert_record('local_cohortmanager_info', $cohortcomposanteinfo);
+//
+//                        echo "VETs remplies Test 37.\n";
+//                    }
+//
+//                    if (!$DB->record_exists('cohort_members',
+//                            array('cohortid' => $cohortcomposanteid, 'userid' => $user->id))) {
+//
+//                        echo "Inscription de l'utilisateur ".$username."\n";
+//
+//                        echo "VETs remplies Test 38.\n";
+//
+//                        cohort_add_member($cohortcomposanteid, $user->id);
+//
+//                        echo "Utilisateur inscrit\n";
+//                    } else {
+//
+//                        echo "VETs remplies Test 39.\n";
+//
+//                        foreach ($listexistence as $tempexistence) {
+//
+//                            if ($tempexistence->userid == $user->id
+//                                    && $tempexistence->cohortid == $cohortcomposanteid) {
+//
+//                                $tempexistence->stillexists = 1;
+//                            }
+//                        }
+//                    }
                 }
             }
         }
