@@ -404,7 +404,7 @@ $timesync = time();
 //    }
 //}
 
-// Cohortes de VETs remplies et de composantes.
+// Cohortes de VETs remplies et de composantes. Modifié sur UE Libres pour ne pas tester l'existence des catégories.
 
 echo "Début des VETs remplies.\n";
 
@@ -520,91 +520,84 @@ if ($fileopeningvet == false) {
 
                     $cohortcode = $CFG->yearprefix."-".$inscription->getAttribute('CodeEtape');
 
-                    if ($DB->record_exists('course_categories', array('idnumber' => $cohortcode))) {
+                    $contextidparentincategory = context_system::instance()->id;
 
-                        $vetcategory = $DB->get_record('course_categories', array('idnumber' => $cohortcode));
+                    if (!$DB->record_exists('cohort', array('idnumber' => $cohortcode,
+                        'contextid' => $contextidparentincategory))) {
 
-                        $contextidparentincategory = $DB->get_record('context',
-                                array('instanceid' => $vetcategory->parent,
-                                    'contextlevel' => CONTEXT_COURSECAT))->id;
+                        echo "VETs remplies Test 10.\n";
 
-                        if (!$DB->record_exists('cohort', array('idnumber' => $cohortcode,
-                            'contextid' => $contextidparentincategory))) {
+                        $cohort = new stdClass();
+                        $cohort->contextid = $contextidparentincategory;
+                        $cohort->name = substr($inscription->getAttribute('LibEtape'), 9);
+                        $cohort->idnumber = $cohortcode;
+                        $cohort->component = 'local_cohortmanager';
 
-                            echo "VETs remplies Test 10.\n";
+                        echo "La cohorte ".$cohort->name." n'existe pas\n";
 
-                            $cohort = new stdClass();
-                            $cohort->contextid = $contextidparentincategory;
-                            $cohort->name = substr($inscription->getAttribute('LibEtape'), 9);
-                            $cohort->idnumber = $cohortcode;
-                            $cohort->component = 'local_cohortmanager';
+                        $cohortid = cohort_add_cohort($cohort);
 
-                            echo "La cohorte ".$cohort->name." n'existe pas\n";
+                        echo "Elle est créée.\n";
+                    } else {
 
-                            $cohortid = cohort_add_cohort($cohort);
+                        echo "VETs remplies Test 11.\n";
 
-                            echo "Elle est créée.\n";
-                        } else {
+                        $cohortid = $DB->get_record('cohort', array('idnumber' => $cohortcode,
+                            'contextid' => $contextidparentincategory))->id;
+                    }
 
-                            echo "VETs remplies Test 11.\n";
+                    // Ici, rajouter l'entrée dans local_cohortmanager_info.
 
-                            $cohortid = $DB->get_record('cohort', array('idnumber' => $cohortcode,
-                                'contextid' => $contextidparentincategory))->id;
-                        }
+                    if ($DB->record_exists('local_cohortmanager_info',
+                            array('cohortid' => $cohortid,
+                                'codeelp' => 0))) {
 
-                        // Ici, rajouter l'entrée dans local_cohortmanager_info.
+                        echo "VETs remplies Test 12.\n";
 
-                        if ($DB->record_exists('local_cohortmanager_info',
-                                array('cohortid' => $cohortid,
-                                    'codeelp' => 0))) {
+                        // Update record.
 
-                            echo "VETs remplies Test 12.\n";
+                        $cohortinfo = $DB->get_record('local_cohortmanager_info',
+                            array('cohortid' => $cohortid,
+                                'codeelp' => 0));
 
-                            // Update record.
+                        $cohortinfo->timesynced = $timesync;
 
-                            $cohortinfo = $DB->get_record('local_cohortmanager_info',
-                                array('cohortid' => $cohortid,
-                                    'codeelp' => 0));
+                        $DB->update_record('local_cohortmanager_info', $cohortinfo);
 
-                            $cohortinfo->timesynced = $timesync;
+                    } else {
 
-                            $DB->update_record('local_cohortmanager_info', $cohortinfo);
+                        echo "VETs remplies Test 13.\n";
 
-                        } else {
+                        $cohortinfo = new stdClass();
+                        $cohortinfo->cohortid = $cohortid;
+                        $cohortinfo->teacherid = null;
+                        $cohortinfo->codeelp = 0;
+                        $cohortinfo->timesynced = $timesync;
+                        $cohortinfo->typecohort = "vet";
 
-                            echo "VETs remplies Test 13.\n";
+                        $DB->insert_record('local_cohortmanager_info', $cohortinfo);
+                    }
 
-                            $cohortinfo = new stdClass();
-                            $cohortinfo->cohortid = $cohortid;
-                            $cohortinfo->teacherid = null;
-                            $cohortinfo->codeelp = 0;
-                            $cohortinfo->timesynced = $timesync;
-                            $cohortinfo->typecohort = "vet";
+                    if (!$DB->record_exists('cohort_members',
+                            array('cohortid' => $cohortid, 'userid' => $user->id))) {
 
-                            $DB->insert_record('local_cohortmanager_info', $cohortinfo);
-                        }
+                        echo "VETs remplies Test 14.1.\n";
 
-                        if (!$DB->record_exists('cohort_members',
-                                array('cohortid' => $cohortid, 'userid' => $user->id))) {
+                        echo "Inscription de l'utilisateur ".$username."\n";
 
-                            echo "VETs remplies Test 14.1.\n";
+                        cohort_add_member($cohortid, $user->id);
 
-                            echo "Inscription de l'utilisateur ".$username."\n";
+                        echo "Utilisateur inscrit\n";
+                    } else {
 
-                            cohort_add_member($cohortid, $user->id);
+                        echo "VETs remplies Test 12.2.\n";
 
-                            echo "Utilisateur inscrit\n";
-                        } else {
+                        foreach ($listexistence as $tempexistence) {
 
-                            echo "VETs remplies Test 12.2.\n";
+                            if ($tempexistence->userid == $user->id
+                                    && $tempexistence->cohortid == $cohortid) {
 
-                            foreach ($listexistence as $tempexistence) {
-
-                                if ($tempexistence->userid == $user->id
-                                        && $tempexistence->cohortid == $cohortid) {
-
-                                    $tempexistence->stillexists = 1;
-                                }
+                                $tempexistence->stillexists = 1;
                             }
                         }
                     }
@@ -670,95 +663,85 @@ if ($fileopeningvet == false) {
                     $cohortcomposantecode = $CFG->yearprefix."-S".$composantecode;
                     $categorycode = $CFG->yearprefix."-".$composantecode;
 
-                    if ($DB->record_exists('course_categories',
-                            array('idnumber' => $categorycode))) {
+                    echo "VETs remplies Test 17.\n";
 
-                        echo "VETs remplies Test 17.\n";
+                    $contextidcomposantecategory = context_system::instance()->id;
 
-                        $composantecategory = $DB->get_record('course_categories',
-                                array('idnumber' => $categorycode));
+                    if (!$DB->record_exists('cohort', array('idnumber' => $cohortcomposantecode,
+                        'contextid' => $contextidcomposantecategory))) {
 
-                        $contextidcomposantecategory = $DB->get_record('context',
-                                array('instanceid' => $composantecategory->id,
-                                    'contextlevel' => CONTEXT_COURSECAT))->id;
+                        $cohortcomposante = new stdClass();
+                        $cohortcomposante->contextid = $contextidcomposantecategory;
+                        $cohortcomposante->name = 'Etudiants de'.$composantecode;
+                        $cohortcomposante->idnumber = $cohortcomposantecode;
+                        $cohortcomposante->component = 'local_cohortmanager';
 
-                        if (!$DB->record_exists('cohort', array('idnumber' => $cohortcomposantecode,
-                            'contextid' => $contextidcomposantecategory))) {
+                        echo "La cohorte ".$cohortcomposante->name." n'existe pas\n";
 
-                            $cohortcomposante = new stdClass();
-                            $cohortcomposante->contextid = $contextidcomposantecategory;
-                            $cohortcomposante->name = 'Etudiants de'
-                                    . ' '.substr($composantecategory->name, 4);
-                            $cohortcomposante->idnumber = $cohortcomposantecode;
-                            $cohortcomposante->component = 'local_cohortmanager';
+                        $cohortcomposanteid = cohort_add_cohort($cohortcomposante);
 
-                            echo "La cohorte ".$cohortcomposante->name." n'existe pas\n";
+                        echo "Elle est créée.\n";
+                    } else {
 
-                            $cohortcomposanteid = cohort_add_cohort($cohortcomposante);
+                        echo "VETs remplies Test 18.\n";
 
-                            echo "Elle est créée.\n";
-                        } else {
+                        $cohortcomposanteid = $DB->get_record('cohort',
+                                array('idnumber' => $cohortcomposantecode,
+                                    'contextid' => $contextidcomposantecategory))->id;
+                    }
 
-                            echo "VETs remplies Test 18.\n";
+                    // Ici, rajouter l'entrée dans local_cohortmanager_info.
 
-                            $cohortcomposanteid = $DB->get_record('cohort',
-                                    array('idnumber' => $cohortcomposantecode,
-                                        'contextid' => $contextidcomposantecategory))->id;
-                        }
+                    if ($DB->record_exists('local_cohortmanager_info',
+                            array('cohortid' => $cohortcomposanteid,
+                                'codeelp' => 0))) {
 
-                        // Ici, rajouter l'entrée dans local_cohortmanager_info.
+                        echo "VETs remplies Test 19.\n";
 
-                        if ($DB->record_exists('local_cohortmanager_info',
-                                array('cohortid' => $cohortcomposanteid,
-                                    'codeelp' => 0))) {
+                        // Update record.
 
-                            echo "VETs remplies Test 19.\n";
+                        $cohortcomposanteinfo = $DB->get_record('local_cohortmanager_info',
+                            array('cohortid' => $cohortcomposanteid,
+                                'codeelp' => 0));
 
-                            // Update record.
+                        $cohortcomposanteinfo->timesynced = $timesync;
 
-                            $cohortcomposanteinfo = $DB->get_record('local_cohortmanager_info',
-                                array('cohortid' => $cohortcomposanteid,
-                                    'codeelp' => 0));
+                        $DB->update_record('local_cohortmanager_info', $cohortcomposanteinfo);
 
-                            $cohortcomposanteinfo->timesynced = $timesync;
+                    } else {
 
-                            $DB->update_record('local_cohortmanager_info', $cohortcomposanteinfo);
+                        echo "VETs remplies Test 20.\n";
 
-                        } else {
+                        $cohortcomposanteinfo = new stdClass();
+                        $cohortcomposanteinfo->cohortid = $cohortcomposanteid;
+                        $cohortcomposanteinfo->teacherid = null;
+                        $cohortcomposanteinfo->codeelp = 0;
+                        $cohortcomposanteinfo->timesynced = $timesync;
+                        $cohortcomposanteinfo->typecohort = "composante";
 
-                            echo "VETs remplies Test 20.\n";
+                        $DB->insert_record('local_cohortmanager_info', $cohortcomposanteinfo);
+                    }
 
-                            $cohortcomposanteinfo = new stdClass();
-                            $cohortcomposanteinfo->cohortid = $cohortcomposanteid;
-                            $cohortcomposanteinfo->teacherid = null;
-                            $cohortcomposanteinfo->codeelp = 0;
-                            $cohortcomposanteinfo->timesynced = $timesync;
-                            $cohortcomposanteinfo->typecohort = "composante";
+                    if (!$DB->record_exists('cohort_members',
+                            array('cohortid' => $cohortcomposanteid, 'userid' => $user->id))) {
 
-                            $DB->insert_record('local_cohortmanager_info', $cohortcomposanteinfo);
-                        }
+                        echo "VETs remplies Test 21.1.\n";
 
-                        if (!$DB->record_exists('cohort_members',
-                                array('cohortid' => $cohortcomposanteid, 'userid' => $user->id))) {
+                        echo "Inscription de l'utilisateur ".$username."\n";
 
-                            echo "VETs remplies Test 21.1.\n";
+                        cohort_add_member($cohortcomposanteid, $user->id);
 
-                            echo "Inscription de l'utilisateur ".$username."\n";
+                        echo "Utilisateur inscrit\n";
+                    } else {
 
-                            cohort_add_member($cohortcomposanteid, $user->id);
+                        echo "VETs remplies Test 21.2.\n";
 
-                            echo "Utilisateur inscrit\n";
-                        } else {
+                        foreach ($listexistence as $tempexistence) {
 
-                            echo "VETs remplies Test 21.2.\n";
+                            if ($tempexistence->userid == $user->id
+                                    && $tempexistence->cohortid == $cohortcomposanteid) {
 
-                            foreach ($listexistence as $tempexistence) {
-
-                                if ($tempexistence->userid == $user->id
-                                        && $tempexistence->cohortid == $cohortcomposanteid) {
-
-                                    $tempexistence->stillexists = 1;
-                                }
+                                $tempexistence->stillexists = 1;
                             }
                         }
                     }
@@ -833,91 +816,84 @@ if ($fileopeningvet == false) {
 
                     $cohortcode = $CFG->previousyearprefix."-".$inscription->getAttribute('CodeEtape');
 
-                    if ($DB->record_exists('course_categories', array('idnumber' => $cohortcode))) {
+                    $contextidparentincategory = context_system::instance()->id;
 
-                        $vetcategory = $DB->get_record('course_categories', array('idnumber' => $cohortcode));
+                    if (!$DB->record_exists('cohort', array('idnumber' => $cohortcode,
+                        'contextid' => $contextidparentincategory))) {
 
-                        $contextidparentincategory = $DB->get_record('context',
-                                array('instanceid' => $vetcategory->parent,
-                                    'contextlevel' => CONTEXT_COURSECAT))->id;
+                        $cohort = new stdClass();
+                        $cohort->contextid = $contextidparentincategory;
+                        $cohort->name = substr($inscription->getAttribute('LibEtape'), 9);
+                        $cohort->idnumber = $cohortcode;
+                        $cohort->component = 'local_cohortmanager';
 
-                        if (!$DB->record_exists('cohort', array('idnumber' => $cohortcode,
-                            'contextid' => $contextidparentincategory))) {
+                        echo "La cohorte ".$cohort->name." n'existe pas\n";
 
-                            $cohort = new stdClass();
-                            $cohort->contextid = $contextidparentincategory;
-                            $cohort->name = substr($inscription->getAttribute('LibEtape'), 9);
-                            $cohort->idnumber = $cohortcode;
-                            $cohort->component = 'local_cohortmanager';
+                        echo "VETs remplies Test 25.\n";
 
-                            echo "La cohorte ".$cohort->name." n'existe pas\n";
+                        $cohortid = cohort_add_cohort($cohort);
 
-                            echo "VETs remplies Test 25.\n";
+                        echo "Elle est créée.\n";
+                    } else {
 
-                            $cohortid = cohort_add_cohort($cohort);
+                        echo "VETs remplies Test 26.\n";
 
-                            echo "Elle est créée.\n";
-                        } else {
+                        $cohortid = $DB->get_record('cohort', array('idnumber' => $cohortcode,
+                            'contextid' => $contextidparentincategory))->id;
+                    }
 
-                            echo "VETs remplies Test 26.\n";
+                    // Ici, rajouter l'entrée dans local_cohortmanager_info.
 
-                            $cohortid = $DB->get_record('cohort', array('idnumber' => $cohortcode,
-                                'contextid' => $contextidparentincategory))->id;
-                        }
+                    if ($DB->record_exists('local_cohortmanager_info',
+                            array('cohortid' => $cohortid,
+                                'codeelp' => 0))) {
 
-                        // Ici, rajouter l'entrée dans local_cohortmanager_info.
+                        // Update record.
 
-                        if ($DB->record_exists('local_cohortmanager_info',
-                                array('cohortid' => $cohortid,
-                                    'codeelp' => 0))) {
+                        $cohortinfo = $DB->get_record('local_cohortmanager_info',
+                            array('cohortid' => $cohortid,
+                                'codeelp' => 0));
 
-                            // Update record.
+                        $cohortinfo->timesynced = $timesync;
 
-                            $cohortinfo = $DB->get_record('local_cohortmanager_info',
-                                array('cohortid' => $cohortid,
-                                    'codeelp' => 0));
+                        $DB->update_record('local_cohortmanager_info', $cohortinfo);
 
-                            $cohortinfo->timesynced = $timesync;
+                        echo "VETs remplies Test 27.\n";
 
-                            $DB->update_record('local_cohortmanager_info', $cohortinfo);
+                    } else {
 
-                            echo "VETs remplies Test 27.\n";
+                        $cohortinfo = new stdClass();
+                        $cohortinfo->cohortid = $cohortid;
+                        $cohortinfo->teacherid = null;
+                        $cohortinfo->codeelp = 0;
+                        $cohortinfo->timesynced = $timesync;
+                        $cohortinfo->typecohort = "vet";
 
-                        } else {
+                        $DB->insert_record('local_cohortmanager_info', $cohortinfo);
 
-                            $cohortinfo = new stdClass();
-                            $cohortinfo->cohortid = $cohortid;
-                            $cohortinfo->teacherid = null;
-                            $cohortinfo->codeelp = 0;
-                            $cohortinfo->timesynced = $timesync;
-                            $cohortinfo->typecohort = "vet";
+                        echo "VETs remplies Test 28.\n";
+                    }
 
-                            $DB->insert_record('local_cohortmanager_info', $cohortinfo);
+                    if (!$DB->record_exists('cohort_members',
+                            array('cohortid' => $cohortid, 'userid' => $user->id))) {
 
-                            echo "VETs remplies Test 28.\n";
-                        }
+                        echo "Inscription de l'utilisateur ".$username."\n";
 
-                        if (!$DB->record_exists('cohort_members',
-                                array('cohortid' => $cohortid, 'userid' => $user->id))) {
+                        echo "VETs remplies Test 29.\n";
 
-                            echo "Inscription de l'utilisateur ".$username."\n";
+                        cohort_add_member($cohortid, $user->id);
 
-                            echo "VETs remplies Test 29.\n";
+                        echo "Utilisateur inscrit\n";
+                    } else {
 
-                            cohort_add_member($cohortid, $user->id);
+                        echo "VETs remplies Test 30.\n";
 
-                            echo "Utilisateur inscrit\n";
-                        } else {
+                        foreach ($listexistence as $tempexistence) {
 
-                            echo "VETs remplies Test 30.\n";
+                            if ($tempexistence->userid == $user->id
+                                    && $tempexistence->cohortid == $cohortid) {
 
-                            foreach ($listexistence as $tempexistence) {
-
-                                if ($tempexistence->userid == $user->id
-                                        && $tempexistence->cohortid == $cohortid) {
-
-                                    $tempexistence->stillexists = 1;
-                                }
+                                $tempexistence->stillexists = 1;
                             }
                         }
                     }
@@ -983,97 +959,87 @@ if ($fileopeningvet == false) {
                     $cohortcomposantecode = $CFG->previousyearprefix."-S".$composantecode;
                     $categorycode = $CFG->previousyearprefix."-".$composantecode;
 
-                    if ($DB->record_exists('course_categories',
-                            array('idnumber' => $categorycode))) {
+                    echo "VETs remplies Test 33.\n";
 
-                        echo "VETs remplies Test 33.\n";
+                    $contextidcomposantecategory = context_system::instance()->id;
 
-                        $composantecategory = $DB->get_record('course_categories',
-                                array('idnumber' => $categorycode));
+                    if (!$DB->record_exists('cohort', array('idnumber' => $cohortcomposantecode,
+                        'contextid' => $contextidcomposantecategory))) {
 
-                        $contextidcomposantecategory = $DB->get_record('context',
-                                array('instanceid' => $composantecategory->id,
-                                    'contextlevel' => CONTEXT_COURSECAT))->id;
+                        echo "VETs remplies Test 34.\n";
 
-                        if (!$DB->record_exists('cohort', array('idnumber' => $cohortcomposantecode,
-                            'contextid' => $contextidcomposantecategory))) {
+                        $cohortcomposante = new stdClass();
+                        $cohortcomposante->contextid = $contextidcomposantecategory;
+                        $cohortcomposante->name = 'Etudiants de'.$composantecode;
+                        $cohortcomposante->idnumber = $cohortcomposantecode;
+                        $cohortcomposante->component = 'local_cohortmanager';
 
-                            echo "VETs remplies Test 34.\n";
+                        echo "La cohorte ".$cohortcomposante->name." n'existe pas\n";
 
-                            $cohortcomposante = new stdClass();
-                            $cohortcomposante->contextid = $contextidcomposantecategory;
-                            $cohortcomposante->name = 'Etudiants de'
-                                    . ' '.substr($composantecategory->name, 4);
-                            $cohortcomposante->idnumber = $cohortcomposantecode;
-                            $cohortcomposante->component = 'local_cohortmanager';
+                        $cohortcomposanteid = cohort_add_cohort($cohortcomposante);
 
-                            echo "La cohorte ".$cohortcomposante->name." n'existe pas\n";
+                        echo "Elle est créée.\n";
+                    } else {
 
-                            $cohortcomposanteid = cohort_add_cohort($cohortcomposante);
+                        echo "VETs remplies Test 35.\n";
 
-                            echo "Elle est créée.\n";
-                        } else {
+                        $cohortcomposanteid = $DB->get_record('cohort',
+                                array('idnumber' => $cohortcomposantecode,
+                                    'contextid' => $contextidcomposantecategory))->id;
+                    }
 
-                            echo "VETs remplies Test 35.\n";
+                    // Ici, rajouter l'entrée dans local_cohortmanager_info.
 
-                            $cohortcomposanteid = $DB->get_record('cohort',
-                                    array('idnumber' => $cohortcomposantecode,
-                                        'contextid' => $contextidcomposantecategory))->id;
-                        }
+                    if ($DB->record_exists('local_cohortmanager_info',
+                            array('cohortid' => $cohortcomposanteid,
+                                'codeelp' => 0))) {
 
-                        // Ici, rajouter l'entrée dans local_cohortmanager_info.
+                        // Update record.
 
-                        if ($DB->record_exists('local_cohortmanager_info',
-                                array('cohortid' => $cohortcomposanteid,
-                                    'codeelp' => 0))) {
+                        $cohortcomposanteinfo = $DB->get_record('local_cohortmanager_info',
+                            array('cohortid' => $cohortcomposanteid,
+                                'codeelp' => 0));
 
-                            // Update record.
+                        $cohortcomposanteinfo->timesynced = $timesync;
 
-                            $cohortcomposanteinfo = $DB->get_record('local_cohortmanager_info',
-                                array('cohortid' => $cohortcomposanteid,
-                                    'codeelp' => 0));
+                        $DB->update_record('local_cohortmanager_info', $cohortcomposanteinfo);
 
-                            $cohortcomposanteinfo->timesynced = $timesync;
+                        echo "VETs remplies Test 36.\n";
 
-                            $DB->update_record('local_cohortmanager_info', $cohortcomposanteinfo);
+                    } else {
 
-                            echo "VETs remplies Test 36.\n";
+                        $cohortcomposanteinfo = new stdClass();
+                        $cohortcomposanteinfo->cohortid = $cohortcomposanteid;
+                        $cohortcomposanteinfo->teacherid = null;
+                        $cohortcomposanteinfo->codeelp = 0;
+                        $cohortcomposanteinfo->timesynced = $timesync;
+                        $cohortcomposanteinfo->typecohort = "composante";
 
-                        } else {
+                        $DB->insert_record('local_cohortmanager_info', $cohortcomposanteinfo);
 
-                            $cohortcomposanteinfo = new stdClass();
-                            $cohortcomposanteinfo->cohortid = $cohortcomposanteid;
-                            $cohortcomposanteinfo->teacherid = null;
-                            $cohortcomposanteinfo->codeelp = 0;
-                            $cohortcomposanteinfo->timesynced = $timesync;
-                            $cohortcomposanteinfo->typecohort = "composante";
+                        echo "VETs remplies Test 37.\n";
+                    }
 
-                            $DB->insert_record('local_cohortmanager_info', $cohortcomposanteinfo);
+                    if (!$DB->record_exists('cohort_members',
+                            array('cohortid' => $cohortcomposanteid, 'userid' => $user->id))) {
 
-                            echo "VETs remplies Test 37.\n";
-                        }
+                        echo "Inscription de l'utilisateur ".$username."\n";
 
-                        if (!$DB->record_exists('cohort_members',
-                                array('cohortid' => $cohortcomposanteid, 'userid' => $user->id))) {
+                        echo "VETs remplies Test 38.\n";
 
-                            echo "Inscription de l'utilisateur ".$username."\n";
+                        cohort_add_member($cohortcomposanteid, $user->id);
 
-                            echo "VETs remplies Test 38.\n";
+                        echo "Utilisateur inscrit\n";
+                    } else {
 
-                            cohort_add_member($cohortcomposanteid, $user->id);
+                        echo "VETs remplies Test 39.\n";
 
-                            echo "Utilisateur inscrit\n";
-                        } else {
+                        foreach ($listexistence as $tempexistence) {
 
-                            echo "VETs remplies Test 39.\n";
+                            if ($tempexistence->userid == $user->id
+                                    && $tempexistence->cohortid == $cohortcomposanteid) {
 
-                            foreach ($listexistence as $tempexistence) {
-
-                                if ($tempexistence->userid == $user->id
-                                        && $tempexistence->cohortid == $cohortcomposanteid) {
-
-                                    $tempexistence->stillexists = 1;
-                                }
+                                $tempexistence->stillexists = 1;
                             }
                         }
                     }
@@ -1873,300 +1839,300 @@ if ($fileopeningservice == false) {
 //    }
 //}
 
-// Cohortes de profs de composantes.
-
-$sqllistcohortscomposanteprof = "SELECT distinct cohortid FROM {local_cohortmanager_info} WHERE "
-        . "typecohort LIKE 'composanteprof'";
-
-$listcohortscomposanteprof = $DB->get_records_sql($sqllistcohortscomposanteprof);
-
-$listexistenceprof = array();
-
-foreach ($listcohortscomposanteprof as $cohortcomposanteprofdb) {
-
-    $listmembersdb = $DB->get_records('cohort_members',
-            array('cohortid' => $cohortcomposanteprofdb->cohortid));
-
-    foreach ($listmembersdb as $memberdb) {
-
-        $tempexistence = new stdClass();
-        $tempexistence->cohortid = $cohortcomposanteprofdb->cohortid;
-        $tempexistence->userid = $memberdb->userid;
-        $tempexistence->stillexists = 0;
-
-        $listexistenceprof[] = $tempexistence;
-    }
-}
-
-$xmldoccomposanteprof = new DOMDocument();
-$fileopeningcomposanteprof = $xmldoccomposanteprof->load('/home/referentiel/'
-        . 'DOKEOS_Enseignants_Affectations.xml');
-if ($fileopeningcomposanteprof == false) {
-    echo "Impossible de lire le fichier source.\n";
-} else {
-
-    $xpathvarcomposanteprof = new Domxpath($xmldoccomposanteprof);
-
-    $diplomesprofs = $xpathvarcomposanteprof->query("//Teacher/Diplomes");
-
-    foreach ($diplomesprofs as $diplomeprof) {
-
-        $composantecode = substr($diplomeprof->getAttribute('CodeEtape'), 0, 1);
-        $cohortcomposantecode = $CFG->yearprefix."-T".$composantecode;
-        $categorycode = $CFG->yearprefix."-".$composantecode;
-
-        if ($DB->record_exists('course_categories', array('idnumber' => $categorycode))) {
-
-            $composantecategory = $DB->get_record('course_categories',
-                    array('idnumber' => $categorycode));
-
-            $contextidcomposantecategory = $DB->get_record('context',
-                    array('instanceid' => $composantecategory->id, 'contextlevel' => CONTEXT_COURSECAT))->id;
-
-            if (!$DB->record_exists('cohort',
-                    array('idnumber' => $cohortcomposantecode, 'contextid' => $contextidcomposantecategory))) {
-
-                $cohortcomposante = new stdClass();
-                $cohortcomposante->contextid = $contextidcomposantecategory;
-                $cohortcomposante->name = 'Enseignants de '.substr($composantecategory->name, 4);
-                $cohortcomposante->idnumber = $cohortcomposantecode;
-                $cohortcomposante->component = 'local_cohortmanager';
-
-                echo "La cohorte ".$cohortcomposante->name." n'existe pas\n";
-
-                $cohortcomposanteid = cohort_add_cohort($cohortcomposante);
-
-                echo "Elle est créée.\n";
-            } else {
-
-                $cohortcomposanteid = $DB->get_record('cohort',
-                        array('idnumber' => $cohortcomposantecode, 'contextid' => $contextidcomposantecategory))->id;
-            }
-
-            // Ici, rajouter l'entrée dans local_cohortmanager_info.
-
-            if ($DB->record_exists('local_cohortmanager_info',
-                    array('cohortid' => $cohortcomposanteid, 'codeelp' => 0))) {
-
-                // Update record.
-
-                $cohortcomposanteinfo = $DB->get_record('local_cohortmanager_info',
-                    array('cohortid' => $cohortcomposanteid, 'codeelp' => 0));
-
-                $cohortcomposanteinfo->timesynced = $timesync;
-
-                $DB->update_record('local_cohortmanager_info', $cohortcomposanteinfo);
-
-            } else {
-
-                $cohortcomposanteinfo = new stdClass();
-                $cohortcomposanteinfo->cohortid = $cohortcomposanteid;
-                $cohortcomposanteinfo->teacherid = null;
-                $cohortcomposanteinfo->codeelp = 0;
-                $cohortcomposanteinfo->timesynced = $timesync;
-                $cohortcomposanteinfo->typecohort = "composanteprof";
-
-                $DB->insert_record('local_cohortmanager_info', $cohortcomposanteinfo);
-            }
-
-            $teacher = $diplomeprof->parentNode;
-            $username = $teacher->getAttribute('StaffUID');
-
-            if ($DB->record_exists('user', array('username' => $username))) {
-
-                $user = $DB->get_record('user', array('username' => $username));
-
-                if (!$DB->record_exists('cohort_members',
-                        array('cohortid' => $cohortcomposanteid, 'userid' => $user->id))) {
-
-                    echo "Inscription de l'utilisateur ".$username."\n";
-
-                    cohort_add_member($cohortcomposanteid, $user->id);
-
-                    echo "Utilisateur inscrit\n";
-                } else {
-
-                    foreach ($listexistence as $tempexistence) {
-
-                        if ($tempexistence->userid == $user->id &&
-                                $tempexistence->cohortid == $cohortcomposanteid) {
-
-                            $tempexistence->stillexists = 1;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if (isset($listexistenceprof)) {
-
-        foreach ($listexistenceprof as $tempexistence) {
-
-            if ($tempexistence->stillexists == 0) {
-
-                echo "Désinscription de l'utilisateur $tempexistence->userid "
-                        . "de la cohorte $cohortid Cas 6\n";
-
-                cohort_remove_member($tempexistence->cohortid, $tempexistence->userid);
-
-                echo "Utilisateur désinscrit\n";
-            }
-        }
-    }
-}
-
-// Cohortes de niveaux.
-
-$sqllistcohortsniveaux = "SELECT distinct cohortid FROM {local_cohortmanager_info} WHERE "
-        . "typecohort LIKE 'niveau'";
-
-$listcohortsniveauxdb = $DB->get_records_sql($sqllistcohortsniveaux);
-
-$listexistenceniveaux = array();
-
-foreach ($listcohortsniveauxdb as $cohortniveaudb) {
-
-    $listmembersdb = $DB->get_records('cohort_members',
-            array('cohortid' => $cohortniveaudb->cohortid));
-
-    foreach ($listmembersdb as $memberdb) {
-
-        $tempexistence = new stdClass();
-        $tempexistence->cohortid = $cohortvetdb->cohortid;
-        $tempexistence->userid = $memberdb->userid;
-        $tempexistence->stillexists = 0;
-
-        $listexistenceniveaux[] = $tempexistence;
-    }
-}
-
-$xmldocniveau = new DOMDocument();
-$fileopeningniveau = $xmldocniveau->load('/home/referentiel/DOKEOS_Etudiants_Inscriptions.xml');
-if ($fileopeningniveau == false) {
-    echo "Impossible de lire le fichier source.\n";
-} else {
-
-    $xpathvarniveau = new Domxpath($xmldocniveau);
-
-    $listinscriptions = $xpathvarniveau->query("//Student/"
-            . "Annee_universitaire[@AnneeUniv=$CFG->thisyear]/Inscriptions");
-
-    // Ajouter le code ici.
-
-    foreach ($listinscriptions as $inscription) {
-
-        $vetcode = $CFG->yearprefix."-".$inscription->getAttribute('CodeEtape');
-
-        if ($DB->record_exists('course_categories', array('idnumber' => $vetcode))) {
-
-            $vetcategory = $DB->get_record('course_categories', array('idnumber' => $vetcode));
-            $niveaucategory = $DB->get_record('course_categories',
-                    array('id' => $vetcategory->parent));
-            $ufrcategory = $DB->get_record('course_categories',
-                    array('id' => $niveaucategory->parent));
-
-            $cohortcode = substr($niveaucategory->idnumber, 0, 5)."-S".
-                    substr($niveaucategory->idnumber, 5);
-
-
-            $contextidniveaucategory = $DB->get_record('context',
-                    array('instanceid' => $niveaucategory->id,
-                        'contextlevel' => CONTEXT_COURSECAT))->id;
-
-            if (!$DB->record_exists('cohort', array('idnumber' => $cohortcode,
-                'contextid' => $contextidniveaucategory))) {
-
-                $cohortniveau = new stdClass();
-                $cohortniveau->contextid = $contextidniveaucategory;
-                $cohortniveau->name = 'Tous les étudiants de '.substr($ufrcategory->name, 4).' '
-                        . ''.$niveaucategory->name;
-                $cohortniveau->idnumber = $cohortcode;
-                $cohortniveau->component = 'local_cohortmanager';
-
-                echo "La cohorte ".$cohortniveau->name." n'existe pas\n";
-
-                $cohortniveauid = cohort_add_cohort($cohortniveau);
-
-                echo "Elle est créée.\n";
-            } else {
-
-                $cohortniveauid = $DB->get_record('cohort',
-                        array('idnumber' => $cohortcode,
-                            'contextid' => $contextidniveaucategory))->id;
-            }
-
-            // Ici, rajouter l'entrée dans local_cohortmanager_info.
-
-            if ($DB->record_exists('local_cohortmanager_info',
-                    array('cohortid' => $cohortniveauid,
-                        'codeelp' => 0))) {
-
-                // Update record.
-
-                $cohortniveauinfo = $DB->get_record('local_cohortmanager_info',
-                    array('cohortid' => $cohortniveauid,
-                        'codeelp' => 0));
-
-                $cohortniveauinfo->timesynced = $timesync;
-
-                $DB->update_record('local_cohortmanager_info', $cohortniveauinfo);
-
-            } else {
-
-                $cohortniveauinfo = new stdClass();
-                $cohortniveauinfo->cohortid = $cohortniveauid;
-                $cohortniveauinfo->teacherid = null;
-                $cohortniveauinfo->codeelp = 0;
-                $cohortniveauinfo->timesynced = $timesync;
-                $cohortniveauinfo->typecohort = "niveau";
-
-                $DB->insert_record('local_cohortmanager_info', $cohortniveauinfo);
-            }
-
-            $studentnode = $inscription->parentNode->parentNode;
-            $username = $studentnode->getAttribute('StudentUID');
-
-            if ($DB->record_exists('user', array('username' => $username))) {
-
-                $user = $DB->get_record('user', array('username' => $username));
-
-                if (!$DB->record_exists('cohort_members',
-                        array('cohortid' => $cohortniveauid, 'userid' => $user->id))) {
-
-                    echo "Inscription de l'utilisateur ".$username."\n";
-
-                    cohort_add_member($cohortniveauid, $user->id);
-
-                    echo "Utilisateur inscrit\n";
-                } else {
-
-                    foreach ($listexistence as $tempexistence) {
-
-                        if ($tempexistence->userid == $user->id &&
-                                $tempexistence->cohortid == $cohortniveauid) {
-
-                            $tempexistence->stillexists = 1;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if (isset($listexistence)) {
-
-        foreach ($listexistence as $tempexistence) {
-
-            if ($tempexistence->stillexists == 0) {
-
-                echo "Désinscription de l'utilisateur $tempexistence->userid "
-                        . "de la cohorte $tempexistence->cohortid Cas 7\n";
-
-                cohort_remove_member($tempexistence->cohortid, $tempexistence->userid);
-
-                echo "Utilisateur désinscrit\n";
-            }
-        }
-    }
-}
+//// Cohortes de profs de composantes. Pas sur UE Libres.
+//
+//$sqllistcohortscomposanteprof = "SELECT distinct cohortid FROM {local_cohortmanager_info} WHERE "
+//        . "typecohort LIKE 'composanteprof'";
+//
+//$listcohortscomposanteprof = $DB->get_records_sql($sqllistcohortscomposanteprof);
+//
+//$listexistenceprof = array();
+//
+//foreach ($listcohortscomposanteprof as $cohortcomposanteprofdb) {
+//
+//    $listmembersdb = $DB->get_records('cohort_members',
+//            array('cohortid' => $cohortcomposanteprofdb->cohortid));
+//
+//    foreach ($listmembersdb as $memberdb) {
+//
+//        $tempexistence = new stdClass();
+//        $tempexistence->cohortid = $cohortcomposanteprofdb->cohortid;
+//        $tempexistence->userid = $memberdb->userid;
+//        $tempexistence->stillexists = 0;
+//
+//        $listexistenceprof[] = $tempexistence;
+//    }
+//}
+//
+//$xmldoccomposanteprof = new DOMDocument();
+//$fileopeningcomposanteprof = $xmldoccomposanteprof->load('/home/referentiel/'
+//        . 'DOKEOS_Enseignants_Affectations.xml');
+//if ($fileopeningcomposanteprof == false) {
+//    echo "Impossible de lire le fichier source.\n";
+//} else {
+//
+//    $xpathvarcomposanteprof = new Domxpath($xmldoccomposanteprof);
+//
+//    $diplomesprofs = $xpathvarcomposanteprof->query("//Teacher/Diplomes");
+//
+//    foreach ($diplomesprofs as $diplomeprof) {
+//
+//        $composantecode = substr($diplomeprof->getAttribute('CodeEtape'), 0, 1);
+//        $cohortcomposantecode = $CFG->yearprefix."-T".$composantecode;
+//        $categorycode = $CFG->yearprefix."-".$composantecode;
+//
+//        if ($DB->record_exists('course_categories', array('idnumber' => $categorycode))) {
+//
+//            $composantecategory = $DB->get_record('course_categories',
+//                    array('idnumber' => $categorycode));
+//
+//            $contextidcomposantecategory = $DB->get_record('context',
+//                    array('instanceid' => $composantecategory->id, 'contextlevel' => CONTEXT_COURSECAT))->id;
+//
+//            if (!$DB->record_exists('cohort',
+//                    array('idnumber' => $cohortcomposantecode, 'contextid' => $contextidcomposantecategory))) {
+//
+//                $cohortcomposante = new stdClass();
+//                $cohortcomposante->contextid = $contextidcomposantecategory;
+//                $cohortcomposante->name = 'Enseignants de '.substr($composantecategory->name, 4);
+//                $cohortcomposante->idnumber = $cohortcomposantecode;
+//                $cohortcomposante->component = 'local_cohortmanager';
+//
+//                echo "La cohorte ".$cohortcomposante->name." n'existe pas\n";
+//
+//                $cohortcomposanteid = cohort_add_cohort($cohortcomposante);
+//
+//                echo "Elle est créée.\n";
+//            } else {
+//
+//                $cohortcomposanteid = $DB->get_record('cohort',
+//                        array('idnumber' => $cohortcomposantecode, 'contextid' => $contextidcomposantecategory))->id;
+//            }
+//
+//            // Ici, rajouter l'entrée dans local_cohortmanager_info.
+//
+//            if ($DB->record_exists('local_cohortmanager_info',
+//                    array('cohortid' => $cohortcomposanteid, 'codeelp' => 0))) {
+//
+//                // Update record.
+//
+//                $cohortcomposanteinfo = $DB->get_record('local_cohortmanager_info',
+//                    array('cohortid' => $cohortcomposanteid, 'codeelp' => 0));
+//
+//                $cohortcomposanteinfo->timesynced = $timesync;
+//
+//                $DB->update_record('local_cohortmanager_info', $cohortcomposanteinfo);
+//
+//            } else {
+//
+//                $cohortcomposanteinfo = new stdClass();
+//                $cohortcomposanteinfo->cohortid = $cohortcomposanteid;
+//                $cohortcomposanteinfo->teacherid = null;
+//                $cohortcomposanteinfo->codeelp = 0;
+//                $cohortcomposanteinfo->timesynced = $timesync;
+//                $cohortcomposanteinfo->typecohort = "composanteprof";
+//
+//                $DB->insert_record('local_cohortmanager_info', $cohortcomposanteinfo);
+//            }
+//
+//            $teacher = $diplomeprof->parentNode;
+//            $username = $teacher->getAttribute('StaffUID');
+//
+//            if ($DB->record_exists('user', array('username' => $username))) {
+//
+//                $user = $DB->get_record('user', array('username' => $username));
+//
+//                if (!$DB->record_exists('cohort_members',
+//                        array('cohortid' => $cohortcomposanteid, 'userid' => $user->id))) {
+//
+//                    echo "Inscription de l'utilisateur ".$username."\n";
+//
+//                    cohort_add_member($cohortcomposanteid, $user->id);
+//
+//                    echo "Utilisateur inscrit\n";
+//                } else {
+//
+//                    foreach ($listexistence as $tempexistence) {
+//
+//                        if ($tempexistence->userid == $user->id &&
+//                                $tempexistence->cohortid == $cohortcomposanteid) {
+//
+//                            $tempexistence->stillexists = 1;
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    if (isset($listexistenceprof)) {
+//
+//        foreach ($listexistenceprof as $tempexistence) {
+//
+//            if ($tempexistence->stillexists == 0) {
+//
+//                echo "Désinscription de l'utilisateur $tempexistence->userid "
+//                        . "de la cohorte $cohortid Cas 6\n";
+//
+//                cohort_remove_member($tempexistence->cohortid, $tempexistence->userid);
+//
+//                echo "Utilisateur désinscrit\n";
+//            }
+//        }
+//    }
+//}
+
+//// Cohortes de niveaux. Pas dans UE Libres.
+//
+//$sqllistcohortsniveaux = "SELECT distinct cohortid FROM {local_cohortmanager_info} WHERE "
+//        . "typecohort LIKE 'niveau'";
+//
+//$listcohortsniveauxdb = $DB->get_records_sql($sqllistcohortsniveaux);
+//
+//$listexistenceniveaux = array();
+//
+//foreach ($listcohortsniveauxdb as $cohortniveaudb) {
+//
+//    $listmembersdb = $DB->get_records('cohort_members',
+//            array('cohortid' => $cohortniveaudb->cohortid));
+//
+//    foreach ($listmembersdb as $memberdb) {
+//
+//        $tempexistence = new stdClass();
+//        $tempexistence->cohortid = $cohortvetdb->cohortid;
+//        $tempexistence->userid = $memberdb->userid;
+//        $tempexistence->stillexists = 0;
+//
+//        $listexistenceniveaux[] = $tempexistence;
+//    }
+//}
+//
+//$xmldocniveau = new DOMDocument();
+//$fileopeningniveau = $xmldocniveau->load('/home/referentiel/DOKEOS_Etudiants_Inscriptions.xml');
+//if ($fileopeningniveau == false) {
+//    echo "Impossible de lire le fichier source.\n";
+//} else {
+//
+//    $xpathvarniveau = new Domxpath($xmldocniveau);
+//
+//    $listinscriptions = $xpathvarniveau->query("//Student/"
+//            . "Annee_universitaire[@AnneeUniv=$CFG->thisyear]/Inscriptions");
+//
+//    // Ajouter le code ici.
+//
+//    foreach ($listinscriptions as $inscription) {
+//
+//        $vetcode = $CFG->yearprefix."-".$inscription->getAttribute('CodeEtape');
+//
+//        if ($DB->record_exists('course_categories', array('idnumber' => $vetcode))) {
+//
+//            $vetcategory = $DB->get_record('course_categories', array('idnumber' => $vetcode));
+//            $niveaucategory = $DB->get_record('course_categories',
+//                    array('id' => $vetcategory->parent));
+//            $ufrcategory = $DB->get_record('course_categories',
+//                    array('id' => $niveaucategory->parent));
+//
+//            $cohortcode = substr($niveaucategory->idnumber, 0, 5)."-S".
+//                    substr($niveaucategory->idnumber, 5);
+//
+//
+//            $contextidniveaucategory = $DB->get_record('context',
+//                    array('instanceid' => $niveaucategory->id,
+//                        'contextlevel' => CONTEXT_COURSECAT))->id;
+//
+//            if (!$DB->record_exists('cohort', array('idnumber' => $cohortcode,
+//                'contextid' => $contextidniveaucategory))) {
+//
+//                $cohortniveau = new stdClass();
+//                $cohortniveau->contextid = $contextidniveaucategory;
+//                $cohortniveau->name = 'Tous les étudiants de '.substr($ufrcategory->name, 4).' '
+//                        . ''.$niveaucategory->name;
+//                $cohortniveau->idnumber = $cohortcode;
+//                $cohortniveau->component = 'local_cohortmanager';
+//
+//                echo "La cohorte ".$cohortniveau->name." n'existe pas\n";
+//
+//                $cohortniveauid = cohort_add_cohort($cohortniveau);
+//
+//                echo "Elle est créée.\n";
+//            } else {
+//
+//                $cohortniveauid = $DB->get_record('cohort',
+//                        array('idnumber' => $cohortcode,
+//                            'contextid' => $contextidniveaucategory))->id;
+//            }
+//
+//            // Ici, rajouter l'entrée dans local_cohortmanager_info.
+//
+//            if ($DB->record_exists('local_cohortmanager_info',
+//                    array('cohortid' => $cohortniveauid,
+//                        'codeelp' => 0))) {
+//
+//                // Update record.
+//
+//                $cohortniveauinfo = $DB->get_record('local_cohortmanager_info',
+//                    array('cohortid' => $cohortniveauid,
+//                        'codeelp' => 0));
+//
+//                $cohortniveauinfo->timesynced = $timesync;
+//
+//                $DB->update_record('local_cohortmanager_info', $cohortniveauinfo);
+//
+//            } else {
+//
+//                $cohortniveauinfo = new stdClass();
+//                $cohortniveauinfo->cohortid = $cohortniveauid;
+//                $cohortniveauinfo->teacherid = null;
+//                $cohortniveauinfo->codeelp = 0;
+//                $cohortniveauinfo->timesynced = $timesync;
+//                $cohortniveauinfo->typecohort = "niveau";
+//
+//                $DB->insert_record('local_cohortmanager_info', $cohortniveauinfo);
+//            }
+//
+//            $studentnode = $inscription->parentNode->parentNode;
+//            $username = $studentnode->getAttribute('StudentUID');
+//
+//            if ($DB->record_exists('user', array('username' => $username))) {
+//
+//                $user = $DB->get_record('user', array('username' => $username));
+//
+//                if (!$DB->record_exists('cohort_members',
+//                        array('cohortid' => $cohortniveauid, 'userid' => $user->id))) {
+//
+//                    echo "Inscription de l'utilisateur ".$username."\n";
+//
+//                    cohort_add_member($cohortniveauid, $user->id);
+//
+//                    echo "Utilisateur inscrit\n";
+//                } else {
+//
+//                    foreach ($listexistence as $tempexistence) {
+//
+//                        if ($tempexistence->userid == $user->id &&
+//                                $tempexistence->cohortid == $cohortniveauid) {
+//
+//                            $tempexistence->stillexists = 1;
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+//    if (isset($listexistence)) {
+//
+//        foreach ($listexistence as $tempexistence) {
+//
+//            if ($tempexistence->stillexists == 0) {
+//
+//                echo "Désinscription de l'utilisateur $tempexistence->userid "
+//                        . "de la cohorte $tempexistence->cohortid Cas 7\n";
+//
+//                cohort_remove_member($tempexistence->cohortid, $tempexistence->userid);
+//
+//                echo "Utilisateur désinscrit\n";
+//            }
+//        }
+//    }
+//}
