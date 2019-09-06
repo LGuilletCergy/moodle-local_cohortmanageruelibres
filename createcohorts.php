@@ -1060,12 +1060,15 @@ if ($fileopeningvet == false) {
 
             if ($tempexistence->stillexists == 0) {
 
-                echo "Désinscription de l'utilisateur $tempexistence->userid "
-                        . "de la cohorte $cohortid Cas 2\n";
+                if ($DB->record_exists('cohort', array('id' => $cohortid))) {
 
-                cohort_remove_member($tempexistence->cohortid, $tempexistence->userid);
+                    echo "Désinscription de l'utilisateur $tempexistence->userid "
+                            . "de la cohorte $cohortid Cas 2\n";
 
-                echo "Utilisateur désinscrit\n";
+                    cohort_remove_member($tempexistence->cohortid, $tempexistence->userid);
+
+                    echo "Utilisateur désinscrit\n";
+                }
             }
         }
     }
@@ -1222,12 +1225,15 @@ if ($fileopeningall == false) {
 
             if ($tempcohortmember->stillexists == 0) {
 
-                echo "Désinscription de l'utilisateur $tempcohortmember->userid"
-                        . " de la cohorte $cohortid Cas 3\n";
+                if ($DB->record_exists('cohort', array('id' => $cohortid))) {
 
-                cohort_remove_member($cohortid, $tempcohortmember->userid);
+                    echo "Désinscription de l'utilisateur $tempcohortmember->userid"
+                            . " de la cohorte $cohortid Cas 3\n";
 
-                echo "Utilisateur désinscrit\n";
+                    cohort_remove_member($cohortid, $tempcohortmember->userid);
+
+                    echo "Utilisateur désinscrit\n";
+                }
             }
         }
     }
@@ -1349,12 +1355,15 @@ if ($fileopeningall == false) {
 
             if ($tempcohortmember->stillexists == 0) {
 
-                echo "Désinscription de l'utilisateur $tempcohortmember->userid"
-                        . " de la cohorte $cohortid Cas 3\n";
+                if ($DB->record_exists('cohort', array('id' => $cohortid))) {
 
-                cohort_remove_member($cohortid, $tempcohortmember->userid);
+                    echo "Désinscription de l'utilisateur $tempcohortmember->userid"
+                            . " de la cohorte $cohortid Cas 3\n";
 
-                echo "Utilisateur désinscrit\n";
+                    cohort_remove_member($cohortid, $tempcohortmember->userid);
+
+                    echo "Utilisateur désinscrit\n";
+                }
             }
         }
     }
@@ -1476,12 +1485,15 @@ if ($fileopeningall == false) {
 
             if ($tempcohortmember->stillexists == 0) {
 
-                echo "Désinscription de l'utilisateur $tempcohortmember->userid"
-                        . " de la cohorte $cohortid Cas 3\n";
+                if ($DB->record_exists('cohort', array('id' => $cohortid))) {
 
-                cohort_remove_member($cohortid, $tempcohortmember->userid);
+                    echo "Désinscription de l'utilisateur $tempcohortmember->userid"
+                            . " de la cohorte $cohortid Cas 3\n";
 
-                echo "Utilisateur désinscrit\n";
+                    cohort_remove_member($cohortid, $tempcohortmember->userid);
+
+                    echo "Utilisateur désinscrit\n";
+                }
             }
         }
     }
@@ -1952,7 +1964,7 @@ if ($fileopeningservice == false) {
 //                    echo "Utilisateur inscrit\n";
 //                } else {
 //
-//                    foreach ($listexistence as $tempexistence) {
+//                    foreach ($listexistenceprof as $tempexistence) {
 //
 //                        if ($tempexistence->userid == $user->id &&
 //                                $tempexistence->cohortid == $cohortcomposanteid) {
@@ -2107,7 +2119,7 @@ if ($fileopeningservice == false) {
 //                    echo "Utilisateur inscrit\n";
 //                } else {
 //
-//                    foreach ($listexistence as $tempexistence) {
+//                    foreach ($listexistenceniveaux as $tempexistence) {
 //
 //                        if ($tempexistence->userid == $user->id &&
 //                                $tempexistence->cohortid == $cohortniveauid) {
@@ -2120,9 +2132,9 @@ if ($fileopeningservice == false) {
 //        }
 //    }
 //
-//    if (isset($listexistence)) {
+//    if (isset($listexistenceniveaux)) {
 //
-//        foreach ($listexistence as $tempexistence) {
+//        foreach ($listexistenceniveaux as $tempexistence) {
 //
 //            if ($tempexistence->stillexists == 0) {
 //
